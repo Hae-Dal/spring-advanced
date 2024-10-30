@@ -13,7 +13,8 @@ import org.example.expert.domain.user.entity.User;
 @Table(name = "comments")
 public class Comment extends Timestamped {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String contents;
 
@@ -31,7 +32,10 @@ public class Comment extends Timestamped {
         this.todo = todo;
     }
 
-    public void update(String contents) {
-        this.contents = contents;
+    public void updateContents(String newContents) {
+        if (newContents == null || newContents.trim().isEmpty()) {
+            throw new IllegalArgumentException("내용은 비어 있을 수 없습니다.");
+        }
+        this.contents = newContents;
     }
 }

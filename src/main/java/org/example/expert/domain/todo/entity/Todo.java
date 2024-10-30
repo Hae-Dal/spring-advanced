@@ -17,8 +17,10 @@ import java.util.List;
 @Table(name = "todos")
 public class Todo extends Timestamped {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
     private String contents;
     private String weather;
@@ -34,6 +36,7 @@ public class Todo extends Timestamped {
     private List<Manager> managers = new ArrayList<>();
 
     public Todo(String title, String contents, String weather, User user) {
+        validateTodoDetails(title, contents);
         this.title = title;
         this.contents = contents;
         this.weather = weather;
@@ -42,7 +45,17 @@ public class Todo extends Timestamped {
     }
 
     public void update(String title, String contents) {
+        validateTodoDetails(title, contents);
         this.title = title;
         this.contents = contents;
+    }
+
+    private void validateTodoDetails(String title, String contents) {
+        if (title == null || title.isEmpty()) {
+            throw new IllegalArgumentException("Title cannot be null or empty");
+        }
+        if (contents == null || contents.isEmpty()) {
+            throw new IllegalArgumentException("Contents cannot be null or empty");
+        }
     }
 }

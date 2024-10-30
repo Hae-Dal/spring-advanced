@@ -15,8 +15,8 @@ import org.example.expert.domain.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,34 +32,34 @@ public class CommentService {
         Todo todo = todoRepository.findById(todoId).orElseThrow(() ->
                 new InvalidRequestException("Todo not found"));
 
-        Comment newComment = new Comment(
-                commentSaveRequest.getContents(),
-                user,
-                todo
-        );
-
+        Comment newComment = new Comment(commentSaveRequest.getContents(), user, todo);
         Comment savedComment = commentRepository.save(newComment);
 
-        return new CommentSaveResponse(
-                savedComment.getId(),
-                savedComment.getContents(),
-                new UserResponse(user.getId(), user.getEmail())
-        );
+        return new CommentSaveResponse(savedComment.getId(), savedComment.getContents(),
+                new UserResponse(user.getId(), user.getEmail()));
     }
 
     public List<CommentResponse> getComments(long todoId) {
-        List<Comment> commentList = commentRepository.findByTodoIdWithUser(todoId);
+        return commentRepository.findByTodoIdWithUser(todoId).stream()
+                .map(comment -> new CommentResponse(
+                        comment.getId(),
+                        comment.getContents(),
+                        new UserResponse(comment.getUser().getId(), comment.getUser().getEmail())))
+                .collect(Collectors.toList());
+    }
 
-        List<CommentResponse> dtoList = new ArrayList<>();
-        for (Comment comment : commentList) {
-            User user = comment.getUser();
-            CommentResponse dto = new CommentResponse(
-                    comment.getId(),
-                    comment.getContents(),
-                    new UserResponse(user.getId(), user.getEmail())
-            );
-            dtoList.add(dto);
+    @Transactional
+    public void updateComment(long commentId, String newContents) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                () -> new InvalidRequestException("Comment not found"));
+        comment.updateContents(newContents);
+    }
+
+    @Transactional
+    public void deleteComment(long commentId) {
+        if (!commentRepository.existsById(commentId)) {
+            throw new InvalidRequestException("Comment not found");
         }
-        return dtoList;
+        commentRepository.deleteById(commentId);
     }
 }
